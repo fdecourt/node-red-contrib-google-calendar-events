@@ -1,0 +1,117 @@
+<script type="text/javascript">
+    // Register the custom "google-calendar-config" node type
+    RED.nodes.registerType('google-calendar-config', {
+        category: 'config',  // Define the node category as "config"
+        defaults: {
+            name: { value: "" },  // The node's name field
+            redirectUri: { value: "" }  // The redirect URI for OAuth2 authentication
+        },
+        credentials: {
+            clientId: { type: "text" },  // Store Client ID as plain text
+            clientSecret: { type: "password" },  // Store Client Secret as a password (hidden in the UI)
+            accessToken: { type: "password" },  // Store Access Token as a password (hidden in the UI)
+            refreshToken: { type: "password" }  // Store Refresh Token as a password (hidden in the UI)
+        },
+        label: function() {
+            return this.name || "Google Calendar Config";  // Return the name of the node as the label
+        },
+        oneditprepare: function() {
+            var node = this;  // Reference to the current node instance
+            var location = window.location;
+            // Construct the redirect URI based on the current window's location
+            var redirectUri = location.protocol + '//' + location.hostname + (location.port ? ':' + location.port : '') + '/google-calendar/auth/callback';
+
+            // Set the redirect URI field in the UI
+            $("#node-config-input-redirectUri").val(redirectUri);
+
+            // If a Client ID is already stored, populate the Client ID input field
+            if (node.credentials && node.credentials.clientId) {
+                $("#node-config-input-credentials-clientId").val(node.credentials.clientId);
+            }
+            // The Client Secret is intentionally not pre-filled for security reasons
+
+            // Create an "Authenticate with Google" button
+            var authenticateButton = $('<button>', { text: 'Authenticate with Google' }).button();
+
+            // Event handler for the authenticate button click
+            authenticateButton.on('click', function(e) {
+                e.preventDefault();  // Prevent the default form submission
+
+                var clientId = $("#node-config-input-credentials-clientId").val();  // Retrieve the Client ID from the input field
+                var clientSecret = $("#node-config-input-credentials-clientSecret").val();  // Retrieve the Client Secret from the input field
+
+                // Validate that both Client ID and Client Secret are provided
+                if (!clientId || !clientSecret) {
+                    RED.notify("Please enter Client ID and Client Secret", "error");  // Show an error notification if missing
+                    return;
+                }
+
+                var nodeId = node.id;  // Retrieve the current node ID
+
+                // Initiate the authentication process by sending credentials to the server
+                $.ajax({
+                    url: 'google-calendar/auth/init',  // The endpoint for initiating authentication
+                    type: 'POST',  // Send a POST request
+                    data: {
+                        nodeId: nodeId,  // Include the node ID
+                        clientId: clientId,  // Include the Client ID
+                        clientSecret: clientSecret  // Include the Client Secret
+                    },
+                    success: function(data) {
+                        // Open a new window for the Google authentication page
+                        var authWindow = window.open(data.authUrl, '_blank', 'width=500,height=600');
+
+                        // Periodically check if the authentication window has been closed
+                        var authWindowTimer = setInterval(function() {
+                            if (authWindow.closed) {
+                                clearInterval(authWindowTimer);  // Stop checking if the window is closed
+                                RED.notify("Authentication process completed.", "info");  // Notify the user that authentication is done
+                            }
+                        }, 500);
+                    },
+                    error: function(jqXHR, textStatus, errorThrown) {
+                        // Notify the user if there was an error during the authentication initiation
+                        RED.notify("Authentication initiation failed: " + errorThrown, "error");
+                    }
+                });
+            });
+
+            // Append the authenticate button after the redirect URI input field
+            $("#node-config-input-redirectUri").parent().after(
+                $('<div class="form-row">').append(authenticateButton)
+            );
+        },
+        oneditsave: function() {
+            var clientId = $("#node-config-input-credentials-clientId").val();  // Retrieve the Client ID from the input field
+            var clientSecret = $("#node-config-input-credentials-clientSecret").val();  // Retrieve the Client Secret from the input field
+
+            // Save the credentials when the node is saved
+            this.credentials = {
+                clientId: clientId,
+                clientSecret: clientSecret,
+                accessToken: this.credentials.accessToken,  // Preserve the existing access token
+                refreshToken: this.credentials.refreshToken  // Preserve the existing refresh token
+            };
+        }
+    });
+</script>
+
+<script type="text/html" data-template-name="google-calendar-config">
+    <div class="form-row">
+        <label for="node-config-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-config-input-name" placeholder="Name">  <!-- Input for the name of the node -->
+    </div>
+    <div class="form-row">
+        <label for="node-config-input-credentials-clientId"><i class="fa fa-key"></i> Client ID</label>
+        <input type="text" id="node-config-input-credentials-clientId" placeholder="Client ID">  <!-- Input for Client ID -->
+    </div>
+    <div class="form-row">
+        <label for="node-config-input-credentials-clientSecret"><i class="fa fa-lock"></i> Client Secret</label>
+        <input type="password" id="node-config-input-credentials-clientSecret" placeholder="Client Secret">  <!-- Input for Client Secret (hidden) -->
+    </div>
+    <div class="form-row">
+        <label for="node-config-input-redirectUri"><i class="fa fa-link"></i> Authorized Redirect URI</label>
+        <input type="text" id="node-config-input-redirectUri" readonly>  <!-- Input for the authorized redirect URI (read-only) -->
+        <p>Copy this URI and add it to your Google API console's authorized redirect URIs.</p>  <!-- Instruction to add this URI to Google API console -->
+    </div>
+</script>

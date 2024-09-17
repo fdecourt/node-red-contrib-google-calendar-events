@@ -1,0 +1,118 @@
+<script type="text/javascript">
+    RED.nodes.registerType('google-calendar-events', {
+        category: 'function',
+        color: '#a6bbcf',
+        defaults: {
+            name: { value: "" },
+            google: { type: "google-calendar-config", required: true },
+            calendar: { value: "", required: false },
+            startDate: { value: "", required: false },
+            endDate: { value: "", required: false }
+        },
+        inputs: 1,
+        outputs: 1,
+        icon: "font-awesome/fa-calendar",
+        label: function() {
+            return this.name || "Google Calendar Events";
+        },
+        oneditprepare: function() {
+            var node = this;
+
+            // Initialiser les champs de date
+            $("#node-input-startDate").val(node.startDate);
+            $("#node-input-endDate").val(node.endDate);
+
+            // Vérifier si la configuration Google est sélectionnée
+            var googleConfigId = $("#node-input-google").val();
+            handleGoogleConfigChange(googleConfigId); // Appeler cette fonction dès l'initialisation
+
+            // Charger les calendriers lorsque le menu déroulant est cliqué
+            $("#node-input-calendar").one('focus', function() {
+                loadCalendars();
+            });
+
+            // Détecter le changement de configuration Google
+            $("#node-input-google").on('change', function() {
+                googleConfigId = $(this).val();
+                handleGoogleConfigChange(googleConfigId); // Appeler la fonction de gestion de la configuration
+            });
+
+            // Fonction pour gérer le changement de configuration Google
+            function handleGoogleConfigChange(googleConfigId) {
+			
+                if (!googleConfigId || googleConfigId === "_ADD_") {
+                    $("#node-input-calendar").empty().append($('<option>').text("Please configure Google Calendar first."));
+                    $("#node-input-calendar").prop('disabled', true);
+                } else {
+				    loadCalendars();
+                    $("#node-input-calendar").empty().append($('<option>').text("Select a calendar..."));
+                    $("#node-input-calendar").prop('disabled', false);
+                    $("#node-input-calendar").off('focus').one('focus', function() {
+                        
+                    });
+                }
+            }
+
+            // Fonction pour charger les calendriers
+            function loadCalendars() {
+                // Mémoriser le calendrier sélectionné avant de rafraîchir la liste
+                var selectedCalendar = $("#node-input-calendar").val();
+                $("#node-input-calendar").empty().append($('<option>').text("Loading calendars..."));
+
+                $.getJSON('google-calendar/get-calendars', { configNodeId: googleConfigId }, function(data) {
+                    $("#node-input-calendar").empty();
+
+                    // Ajouter les calendriers dans la liste déroulante
+                    data.items.forEach(function(calendar) {
+                        $("#node-input-calendar").append($("<option></option>").attr("value", calendar.id).text(calendar.summary));
+                    });
+
+                    // Réappliquer le dernier calendrier sélectionné s'il existe dans la liste
+                    if (selectedCalendar) {
+                        $("#node-input-calendar").val(selectedCalendar);
+                    }
+
+                    // Si un calendrier est sélectionné dans le nœud, le réappliquer
+                    if (node.calendar) {
+                        $("#node-input-calendar").val(node.calendar);
+                    }
+                }).fail(function(jqXHR, textStatus, errorThrown) {
+                    $("#node-input-calendar").empty().append($('<option>').text("Failed to load calendars"));
+                    RED.notify("Failed to load calendars: " + errorThrown, "error");
+                });
+            }
+        },
+        oneditsave: function() {
+            var node = this;
+            node.startDate = $("#node-input-startDate").val();
+            node.endDate = $("#node-input-endDate").val();
+            node.calendar = $("#node-input-calendar").val();
+        }
+    });
+</script>
+
+<script type="text/html" data-template-name="google-calendar-events">
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-input-name">
+    </div>
+    <div class="form-row">
+        <label for="node-input-google"><i class="fa fa-cogs"></i> Google Calendar Config</label>
+        <select id="node-input-google"></select>
+    </div>
+    <div class="form-row">
+        <label for="node-input-calendar"><i class="fa fa-calendar"></i> Calendar</label>
+        <select id="node-input-calendar"></select>
+    </div>
+    <div class="form-row">
+        <label for="node-input-startDate"><i class="fa fa-clock-o"></i> Start Date</label>
+        <input type="datetime-local" id="node-input-startDate">
+    </div>
+    <div class="form-row">
+        <label for="node-input-endDate"><i class="fa fa-clock-o"></i> End Date</label>
+        <input type="datetime-local" id="node-input-endDate">
+    </div>
+    <div class="form-tips">
+        <p>You can override the Calendar, Start Date, and End Date by setting <code>msg.calendar</code>, <code>msg.start</code>, and <code>msg.end</code>.</p>
+    </div>
+</script>

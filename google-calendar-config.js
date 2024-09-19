@@ -7,11 +7,24 @@ module.exports = function(RED) {
     const authSessions = {};
 
     // Function to define the Google Calendar config node
-    function GoogleCalendarConfigNode(n) {
-        RED.nodes.createNode(this, n);
-        this.name = n.name; // The name of the node
-        this.redirectUri = n.redirectUri; // The redirect URI for OAuth2
-        this.credentials = this.credentials || {}; // Placeholder for credentials (Client ID, Secret, Tokens)
+    function GoogleCalendarConfigNode(config) {
+        RED.nodes.createNode(this, config);
+        const node = this;
+
+        node.name = config.name; // The name of the node
+        node.redirectUri = config.redirectUri; // The redirect URI for OAuth2
+
+        // Credentials are stored securely using Node-RED's credentials system
+        node.credentials = this.credentials || {}; // Placeholder for credentials (Client ID, Secret, Tokens)
+
+        // Cleanup when the node is closed
+        node.on('close', (removed, done) => {
+            // Perform any cleanup actions if needed
+            if (removed) {
+                // Node is being deleted
+            }
+            done(); // Signal that cleanup is done
+        });
     }
 
     // Register the custom node type "google-calendar-config"
@@ -35,8 +48,8 @@ module.exports = function(RED) {
     RED.httpAdmin.use('/google-calendar/auth', bodyParser.json());
     RED.httpAdmin.use('/google-calendar/auth', bodyParser.urlencoded({ extended: true }));
 
-    // OAuth2 authentication initiation endpoint
-    RED.httpAdmin.post('/google-calendar/auth/init', securityHeaders, function(req, res) {
+    // OAuth2 authentication initiation endpoint, secured with appropriate permissions
+    RED.httpAdmin.post('/google-calendar/auth/init', RED.auth.needsPermission('flows.write'), securityHeaders, function(req, res) {
         try {
             const nodeId = req.body.nodeId; // Retrieve node ID from request
             const clientId = req.body.clientId; // Retrieve Client ID from request body
@@ -90,8 +103,8 @@ module.exports = function(RED) {
         }
     });
 
-    // OAuth2 callback handler (Google redirects here after authentication)
-    RED.httpAdmin.get('/google-calendar/auth/callback', securityHeaders, function(req, res) {
+    // OAuth2 callback handler (Google redirects here after authentication), secured with appropriate permissions
+    RED.httpAdmin.get('/google-calendar/auth/callback', RED.auth.needsPermission('flows.write'), securityHeaders, function(req, res) {
         const code = req.query.code; // The authorization code returned by Google
         const state = req.query.state; // The state (session ID) passed during the initiation
 

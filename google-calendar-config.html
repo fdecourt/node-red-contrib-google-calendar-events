@@ -16,10 +16,10 @@
             return this.name || "Google Calendar Config";  // Return the name of the node as the label
         },
         oneditprepare: function() {
-            var node = this;  // Reference to the current node instance
-            var location = window.location;
+            const node = this;  // Reference to the current node instance
+            const location = window.location;
             // Construct the redirect URI based on the current window's location
-            var redirectUri = location.protocol + '//' + location.hostname + (location.port ? ':' + location.port : '') + '/google-calendar/auth/callback';
+            const redirectUri = location.protocol + '//' + location.hostname + (location.port ? ':' + location.port : '') + '/google-calendar/auth/callback';
 
             // Set the redirect URI field in the UI
             $("#node-config-input-redirectUri").val(redirectUri);
@@ -31,14 +31,14 @@
             // The Client Secret is intentionally not pre-filled for security reasons
 
             // Create an "Authenticate with Google" button
-            var authenticateButton = $('<button>', { text: 'Authenticate with Google' }).button();
+            const authenticateButton = $('<button>', { text: 'Authenticate with Google' }).button();
 
             // Event handler for the authenticate button click
             authenticateButton.on('click', function(e) {
                 e.preventDefault();  // Prevent the default form submission
 
-                var clientId = $("#node-config-input-credentials-clientId").val();  // Retrieve the Client ID from the input field
-                var clientSecret = $("#node-config-input-credentials-clientSecret").val();  // Retrieve the Client Secret from the input field
+                const clientId = $("#node-config-input-credentials-clientId").val();  // Retrieve the Client ID from the input field
+                const clientSecret = $("#node-config-input-credentials-clientSecret").val();  // Retrieve the Client Secret from the input field
 
                 // Validate that both Client ID and Client Secret are provided
                 if (!clientId || !clientSecret) {
@@ -46,7 +46,7 @@
                     return;
                 }
 
-                var nodeId = node.id;  // Retrieve the current node ID
+                const nodeId = node.id;  // Retrieve the current node ID
 
                 // Initiate the authentication process by sending credentials to the server
                 $.ajax({
@@ -59,10 +59,10 @@
                     },
                     success: function(data) {
                         // Open a new window for the Google authentication page
-                        var authWindow = window.open(data.authUrl, '_blank', 'width=500,height=600');
+                        const authWindow = window.open(data.authUrl, '_blank', 'width=500,height=600');
 
                         // Periodically check if the authentication window has been closed
-                        var authWindowTimer = setInterval(function() {
+                        const authWindowTimer = setInterval(function() {
                             if (authWindow.closed) {
                                 clearInterval(authWindowTimer);  // Stop checking if the window is closed
                                 RED.notify("Authentication process completed.", "info");  // Notify the user that authentication is done
@@ -82,8 +82,8 @@
             );
         },
         oneditsave: function() {
-            var clientId = $("#node-config-input-credentials-clientId").val();  // Retrieve the Client ID from the input field
-            var clientSecret = $("#node-config-input-credentials-clientSecret").val();  // Retrieve the Client Secret from the input field
+            const clientId = $("#node-config-input-credentials-clientId").val();  // Retrieve the Client ID from the input field
+            const clientSecret = $("#node-config-input-credentials-clientSecret").val();  // Retrieve the Client Secret from the input field
 
             // Save the credentials when the node is saved
             this.credentials = {
@@ -96,6 +96,7 @@
     });
 </script>
 
+<!-- HTML form template for the Google Calendar Config node -->
 <script type="text/html" data-template-name="google-calendar-config">
     <div class="form-row">
         <label for="node-config-input-name"><i class="fa fa-tag"></i> Name</label>

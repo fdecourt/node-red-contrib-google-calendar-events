@@ -1,9 +1,9 @@
 {
-  "name": "node-red-contrib-google-calendar-events",
-  "version": "0.0.1",
-  "description": "Hopefully a soon secure and robust Node-RED node to retrieve Google Calendar events between dates",
+  "name": "@fdecourt/node-red-google-calendar-events",
+  "version": "0.0.2",
+  "description": "Hopefully secure and robust Node-RED node to retrieve Google Calendar events between dates",
   "main": "google-calendar-events.js",
-  "keywords": ["node-red", "google", "calendar", "events", "secure"],
+  "keywords": ["node-red", "google", "calendar", "events"],
   "author": "Fdecourt",
   "license": "MIT",
   "dependencies": {

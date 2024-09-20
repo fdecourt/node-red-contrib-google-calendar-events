@@ -75,7 +75,7 @@ If using NginxProxyManager (NPM), you may have to configure a specific location,
 This one is working for me :
 - NODERED_IP : this is the IP address of your NodeRed installation.
 - NODERED_PORT : this is the NodeRed port (if using through HomeAssistant, it is **not** the HomeAssistant Port, but the NodeRed one)
-   
+```
 location /google-calendar/ {
     proxy_pass http://NODERED_IP:NODERED_PORT/google-calendar/; 
     proxy_http_version 1.1;
@@ -86,4 +86,4 @@ location /google-calendar/ {
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
     proxy_set_header X-Forwarded-Proto $scheme;
     proxy_cache_bypass $http_upgrade;
-}
+}```

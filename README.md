@@ -72,9 +72,12 @@ If using it with NodeRed as a plugin in HomeAssistant, you may need to reenter y
 
 ### Nginx Proxy Manager
 If using NginxProxyManager (NPM), you may have to configure a specific location, to allow it to work : 
-This one is working for me :
+
 - NODERED_IP : this is the IP address of your NodeRed installation.
 - NODERED_PORT : this is the NodeRed port (if using through HomeAssistant, it is **not** the HomeAssistant Port, but the NodeRed one)
+
+This one is working for me :
+
 ```
 location /google-calendar/ {
     proxy_pass http://NODERED_IP:NODERED_PORT/google-calendar/; 

@@ -64,3 +64,26 @@ This node retrieves events from your Google Calendar. Configure the following fi
 
 You can dynamically override parameters like calendar, start and end, using msg.calendar, msg.start, msg.end.
 be aware that the calendar you want to use must be identified by its ID (you can find it when opening the google-calendar-events node)
+
+
+## Important Notice
+### Authentication process with HomeAssistant
+If using it with NodeRed as a plugin in HomeAssistant, you may need to reenter yoiur HomeAssistant Login / Password during the authorization process with Google Agenda.
+
+### Nginx Proxy Manager
+If using NginxProxyManager (NPM), you may have to configure a specific location, to allow it to work : 
+This one is working for me :
+- NODERED_IP : this is the IP address of your NodeRed installation.
+- NODERED_PORT : this is the NodeRed port (if using through HomeAssistant, it is **not** the HomeAssistant Port, but the NodeRed one)
+   
+location /google-calendar/ {
+    proxy_pass http://NODERED_IP:NODERED_PORT/google-calendar/; 
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection 'upgrade';
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_cache_bypass $http_upgrade;
+}
